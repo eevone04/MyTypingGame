@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.util.List;
@@ -12,12 +13,10 @@ import java.util.Random;
 import java.util.Scanner;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
 import javax.swing.Timer;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
-import java.util.TimerTask;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -29,15 +28,15 @@ import java.util.TimerTask;
  * @author USER
  */
 public class TimedModeGame extends javax.swing.JFrame {
+    TimedMode timedMode = new TimedMode();
+    int time;
     private Random random = new Random();
-    private int time;
     private boolean includePunctuation;
     private boolean isGameEnded = false; 
     private Timer timer;
-
+    int second;
     private JLabel timerLabel;
-    private JScrollPane jScrollPane2;
-    
+    private boolean timerStarted = false;
     private String currentWord;
     private int currentIndex;
     private Highlighter.HighlightPainter painterCorrect;
@@ -60,8 +59,13 @@ public class TimedModeGame extends javax.swing.JFrame {
 
     private void handleTextFieldEnter() {
         if (!isGameEnded) {
-            JOptionPane.showMessageDialog(this, "Game end!");
-            jTextField2.setEditable(false); // Disable further input in the text field
+            if (!timerStarted) {
+                simpleTimer(); // Start the timer if not already started
+                timerStarted = true;
+            }
+            if (second == 0) {
+             jTextField2.setEditable(false); // Do nothing if the timer has reached zero
+        }
         }
     }
     
@@ -128,29 +132,30 @@ public class TimedModeGame extends javax.swing.JFrame {
         System.err.println("File not found: random-words.txt");
     }
 }
-    private void checkUserInput() {
-        String userInput = jTextField2.getText().trim();
-        String[] words = jTextArea1.getText().split("\\s+");
-        for (int i = currentIndex; i < words.length; i++) {
-            if (userInput.equals(words[i])) {
-                wordStatus.set(i, true); // Set the word as correct
-                currentIndex = i + 1;
-            } else {
-                wordStatus.set(i, false); // Set the word as wrong
-                break;
-            }
-        }
-        if (currentIndex == words.length) {
-            handleGameEnd();
-        }
-    }
     private void setupTextFieldListener() {
-        jTextField2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleTextFieldEnter();
+        jTextField2.addKeyListener(new java.awt.event.KeyAdapter() {
+    public void keyTyped(java.awt.event.KeyEvent evt) {
+        jTextField2KeyTyped(evt);
+    }
+
+            private void jTextField2KeyTyped(KeyEvent evt) {
+                char typedChar = evt.getKeyChar();
+
+    // Check if the timer has started
+    if (!timerStarted) {
+        simpleTimer(); // Start the timer if not already started
+        timerStarted = true;
+    }
+
+    // Handle the typed character, you can add custom logic here
+
+    // For example, you might want to check if the time has reached zero
+    if (second == 0) {
+        jTextField2.setEditable(false);
+    }
             }
         });
+        
     }
     private void highlightUserInput() {
     String userInput = jTextField2.getText().trim();
@@ -182,6 +187,32 @@ public class TimedModeGame extends javax.swing.JFrame {
     painterCorrect = new DefaultHighlighter.DefaultHighlightPainter(Color.GREEN);
     painterWrong = new DefaultHighlighter.DefaultHighlightPainter(Color.RED);
 }
+    public void simpleTimer() {
+    time = timedMode.getTimer();
+    second = time;
+
+    long startTime = System.currentTimeMillis();
+
+    timer = new Timer(100, new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            second = (int) (time - elapsedTime / 1000);
+
+            if (second <= 0) {
+                timer.stop();
+                jLabel2.setText("0");
+                JOptionPane.showMessageDialog(null, "Game end!");
+                handleGameEnd(); // You may want to handle game end actions here
+            } else {
+                jLabel2.setText("" + second);
+            }
+        }
+    });
+
+    timer.start();
+}
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -198,6 +229,7 @@ public class TimedModeGame extends javax.swing.JFrame {
         jTextArea1 = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -225,6 +257,8 @@ public class TimedModeGame extends javax.swing.JFrame {
             }
         });
 
+        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -234,11 +268,13 @@ public class TimedModeGame extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(61, 61, 61)
                         .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 550, Short.MAX_VALUE)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
                             .addComponent(jTextField2))))
                 .addContainerGap())
             .addGroup(layout.createSequentialGroup()
@@ -250,7 +286,9 @@ public class TimedModeGame extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 136, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(70, 70, 70)
@@ -290,6 +328,7 @@ public class TimedModeGame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner jSpinner1;
     private javax.swing.JTextArea jTextArea1;

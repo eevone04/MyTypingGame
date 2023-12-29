@@ -133,6 +133,13 @@ public class TimedMode extends javax.swing.JFrame {
         time = selectedOption;
     }//GEN-LAST:event_jComboBox1ActionPerformed
 
+    public int getTimer(){
+        return time;
+    }
+    
+    public void setTimer(int t){
+        this.time=t;
+    }
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         includePunctuation = jComboBox2.getSelectedItem().equals("Yes");

@@ -160,23 +160,6 @@ public class WordsModeGame extends javax.swing.JFrame {
     }
 }
 
-    private void checkUserInput() {
-        String userInput = jTextField1.getText().trim();
-        String[] words = jTextArea1.getText().split("\\s+");
-        for (int i = currentIndex; i < words.length; i++) {
-            if (userInput.equals(words[i])) {
-                wordStatus.set(i, true); // Set the word as correct
-                currentIndex = i + 1;
-            } else {
-                wordStatus.set(i, false); // Set the word as wrong
-                break;
-            }
-        }
-        highlightUserInput();
-        if (currentIndex == words.length) {
-            handleGameEnd();
-        }
-    }
     private void setupTextFieldListener() {
         jTextField1.addActionListener(new ActionListener() {
             @Override
