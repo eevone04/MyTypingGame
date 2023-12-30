@@ -96,7 +96,7 @@ public class TimedModeGame extends javax.swing.JFrame {
         // Take the first 30 words or less if the file has fewer words
         int wordsToDisplay = Math.min(wordsList.size(), 30);
         StringBuilder randomWords = new StringBuilder();
-
+        
         for (int i = 0; i < wordsToDisplay; i++) {
             randomWords.append(wordsList.get(i)).append(" ");
         }
@@ -155,6 +155,16 @@ public class TimedModeGame extends javax.swing.JFrame {
     }
             }
         });
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+    public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jButton2ActionPerformed(evt);
+    }
+});
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+    public void actionPerformed(java.awt.event.ActionEvent evt) {
+        jButton3ActionPerformed(evt);
+    }
+});
         
     }
     private void highlightUserInput() {
@@ -230,6 +240,8 @@ public class TimedModeGame extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -259,6 +271,20 @@ public class TimedModeGame extends javax.swing.JFrame {
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
 
+        jButton2.setText("Play Again");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jButton3.setText("New Text");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -278,8 +304,12 @@ public class TimedModeGame extends javax.swing.JFrame {
                             .addComponent(jTextField2))))
                 .addContainerGap())
             .addGroup(layout.createSequentialGroup()
-                .addGap(241, 241, 241)
+                .addGap(118, 118, 118)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(46, 46, 46)
+                .addComponent(jButton2)
+                .addGap(39, 39, 39)
+                .addComponent(jButton3)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -294,7 +324,10 @@ public class TimedModeGame extends javax.swing.JFrame {
                 .addGap(70, 70, 70)
                 .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(43, 43, 43)
-                .addComponent(jButton1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2)
+                    .addComponent(jButton3))
                 .addContainerGap())
         );
 
@@ -314,6 +347,32 @@ public class TimedModeGame extends javax.swing.JFrame {
         dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // TODO add your handling code here:
+        generateRandomWords();
+        resetGame();
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        resetGame();
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void resetGame() {
+    // Reset game-related variables
+    isGameEnded = false;
+    timerStarted = false;
+    second = time;
+    jLabel2.setText(Integer.toString(second));
+    jTextField2.setText("");
+    jTextField2.setEditable(true);
+
+    // Reset word status
+    wordStatus.replaceAll(status -> false);
+
+    // Reset highlights
+    jTextField2.getHighlighter().removeAllHighlights();
+}
     /**
      * @param args the command line arguments
      */
@@ -327,6 +386,8 @@ public class TimedModeGame extends javax.swing.JFrame {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
