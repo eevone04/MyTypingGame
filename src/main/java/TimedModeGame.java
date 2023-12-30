@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 import javax.swing.JLabel;
@@ -42,6 +44,12 @@ public class TimedModeGame extends javax.swing.JFrame {
     private Highlighter.HighlightPainter painterCorrect;
     private Highlighter.HighlightPainter painterWrong;
     private List<Boolean> wordStatus;
+    
+    private int totalCharCount = 0;
+    private int incorrectCharCount = 0;
+    
+    Login_Application loginname = new Login_Application();
+    private String uname;
     /**
      * Creates new form TimedModeGame
      */
@@ -71,7 +79,9 @@ public class TimedModeGame extends javax.swing.JFrame {
     
     private void generateRandomWords() {
     try {
-        Scanner scanner = new Scanner(new File("C:/Users/USER/Downloads/random-words.txt"));
+        String userHome = System.getProperty("user.home");
+        String filePath = userHome + "/Downloads/random-words.txt";
+        Scanner scanner = new Scanner(new File(filePath));
         List<String> wordsList = new ArrayList<>();
 
         // Read all words from the file
@@ -210,9 +220,20 @@ public class TimedModeGame extends javax.swing.JFrame {
             second = (int) (time - elapsedTime / 1000);
 
             if (second <= 0) {
+                int[] correctWordInfo = countCorrectWordsAndCharacters();
+                int correctWord = correctWordInfo[0];
+                int correctchar = correctWordInfo[1];
+                int wpm=wpm();
+                double accuracy=Accuracy();
+                
                 timer.stop();
                 jLabel2.setText("0");
-                JOptionPane.showMessageDialog(null, "Game end!");
+                
+                // Format accuracy to two decimal places
+                String formattedAccuracy = String.format("%.2f", accuracy);
+                
+                JOptionPane.showMessageDialog(null, "Game end!"+ "\nCorrect words: " + correctWord + "/" + jTextArea1.getText().split("\\s+").length+"\nCorrect character: "+correctchar+ "\nwpm: " +wpm+"\nAccuracy: "+formattedAccuracy);
+                writeScoreToFile();
                 handleGameEnd(); // You may want to handle game end actions here
             } else {
                 jLabel2.setText("" + second);
@@ -222,7 +243,88 @@ public class TimedModeGame extends javax.swing.JFrame {
 
     timer.start();
 }
+    
+private int[] countCorrectWordsAndCharacters() {
+    String[] expectedWords = jTextArea1.getText().split("\\s+");
+    String userInput = jTextField2.getText().trim();
+    String[] userWords = userInput.split("\\s+");
 
+    int minLen = Math.min(expectedWords.length, userWords.length);
+    int correctWordCount = 0;
+    int correctCharCount = 0;
+    int incorrectCharCount = 0;
+
+    for (int i = 0; i < minLen; i++) {
+        String expectedWord = expectedWords[i];
+        String userWord = i < userWords.length ? userWords[i] : "";
+
+        for (int j = 0; j < expectedWord.length(); j++) {
+            totalCharCount++;
+            char expectedChar = expectedWord.charAt(j);
+            char userChar = (j < userWord.length()) ? userWord.charAt(j) : ' ';
+
+            if (expectedChar == userChar) {
+                correctCharCount++;
+            } else {
+                incorrectCharCount++;
+            }
+        }
+
+        // Check for extra characters in userWord
+        for (int j = expectedWord.length(); j < userWord.length(); j++) {
+            incorrectCharCount++;
+        }
+
+        // Check if the entire word is correct
+        if (expectedWord.equalsIgnoreCase(userWord)) {
+            correctWordCount++;
+        }
+    }
+
+    return new int[]{correctWordCount, correctCharCount, incorrectCharCount};
+}
+
+// Calculate accuracy based on correct and incorrect character counts
+private double Accuracy() {
+    int[] correctWordInfo = countCorrectWordsAndCharacters();
+    int correctCharCount = correctWordInfo[1];
+    int incorrectCharCount = correctWordInfo[2];
+
+    int totalCorrectAndIncorrectChars = correctCharCount + incorrectCharCount;
+
+    if (totalCorrectAndIncorrectChars > 0) {
+        return (correctCharCount * 100.0) / totalCorrectAndIncorrectChars;
+    } else {
+        return 0; // If no characters are typed yet
+    }
+}
+    //wpm
+    private int wpm() {
+    int[] correctWordInfo = countCorrectWordsAndCharacters();
+    int correctCharCount = correctWordInfo[1];
+
+    int wpm = (int) ((((double) correctCharCount / 5)/time)* 60);
+    return wpm;
+    }
+    
+    //data
+    private void writeScoreToFile() {
+        String username = loginname.getUname(); // Get the username
+         int wpm=wpm();
+         double accuracy=Accuracy();
+         String formattedAccuracy = String.format("%.2f", accuracy);
+        
+        try{
+            FileWriter fw = new FileWriter(username+".txt",true);
+            fw.write(wpm+"\t"+formattedAccuracy+"\n");
+            fw.close();
+            JOptionPane.showMessageDialog(null, "Score saved successfully!");
+        }catch(IOException ex){
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error saving the score!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.

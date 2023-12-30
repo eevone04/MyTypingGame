@@ -2,8 +2,12 @@ import java.awt.Color;
 import static java.awt.Component.CENTER_ALIGNMENT;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,11 +39,9 @@ public class WordsModeGame extends javax.swing.JFrame {
      * Creates new form WordsModeGame
      */
     private Random random = new Random();
-    private int time;
+    private long time;
     private boolean includePunctuation;
     private boolean isGameEnded = false; 
-    private Timer timer;
-
     private JLabel timerLabel;
     private JScrollPane jScrollPane2;
     
@@ -48,6 +50,18 @@ public class WordsModeGame extends javax.swing.JFrame {
     private Highlighter.HighlightPainter painterCorrect;
     private Highlighter.HighlightPainter painterWrong;
     private List<Boolean> wordStatus;
+    
+    private int totalCharCount = 0;
+    private int incorrectCharCount = 0;
+    
+    private Timer timer;
+    private long startTime; // Added to track the start time
+    private boolean timerStarted = false;
+    private long totaltime;
+    
+    Login_Application loginname = new Login_Application();
+    private String uname;
+    
     /**
      * Creates new form TimedModeGame
      */
@@ -58,19 +72,97 @@ public class WordsModeGame extends javax.swing.JFrame {
         setupTextFieldListener();
         generateRandomWords();
         setupHighlightPainters();
+        setupTimer();
     }
+    
+    private void setupTimer() {
+    timer = new Timer(1000, new ActionListener() {
+        int seconds = 0;
+        int minutes = 0;
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            seconds++;
+            if (seconds == 60) {
+                seconds = 0;
+                minutes++;
+            }
+            timerLabel.setText(String.format("%02d:%02d", minutes, seconds));
+        }
+    });
+}
+    
     private void handleGameEnd() {
         jTextField1.setEditable(false);
         isGameEnded = true;
-    }
+        
+        // Stop the timer when the game ends
+        if (timer != null) {
+            timer.stop();
+        }
+    
+        // Reset timerStarted flag
+        timerStarted = false;
+        }
 
     private void handleTextFieldEnter() {
         if (!isGameEnded) {
-            JOptionPane.showMessageDialog(this, "Game end");
+            
             jTextField1.setEditable(false); // Disable further input in the text field
-            timer.stop(); // Stop the timer when the game ends
+            isGameEnded = true; // Set the game end flag
+            
+            // Stop the timer when the game ends
+            if (timer != null) {
+                timer.stop();
+            }
+
+            // Reset timerStarted flag
+            timerStarted = false;
+            
+            long endTime = System.currentTimeMillis();
+            totaltime = endTime - startTime;
+            
+            JOptionPane.showMessageDialog(this, "Game Over!"+"\nTime taken: " + formatTime(totaltime)+"s");
+            
+            int[] correctWordInfo = countCorrectWordsAndCharacters();
+            int correctWord = correctWordInfo[0];
+            int correctchar = correctWordInfo[1];
+            int wpm=wpm();
+            double accuracy=Accuracy();
+                
+            // Format accuracy to two decimal places
+            String formattedAccuracy = String.format("%.2f", accuracy);
+                
+            JOptionPane.showMessageDialog(this, "Game end"+ correctWord + "/" + jTextArea1.getText().split("\\s+").length+"\nCorrect character: "+correctchar+ "\nwpm: " +wpm+"\nAccuracy: "+formattedAccuracy);
+            writeScoreToFile();
         }
     }
+    
+
+    private void startTimer() {
+        if (timer != null && !timer.isRunning()) {
+            // Reset startTime when starting the timer
+            startTime = System.currentTimeMillis();
+            timer.start();
+        }
+    }
+    
+    private void resetTimer() {
+        if (timer != null) {
+            timer.stop();
+            timerLabel.setText("00:00");
+        }
+    }
+
+    private String formatTime(long milliseconds) {
+        long seconds = milliseconds / 1000;
+        long minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+        //return seconds;
+    }
+
+    
     private void highlightUserInput() {
     String userInput = jTextField1.getText().trim();
 
@@ -103,7 +195,9 @@ public class WordsModeGame extends javax.swing.JFrame {
 }
     private void generateRandomWords() {
     try {
-        Scanner scanner = new Scanner(new File("C:/Users/USER/Downloads/random-words.txt"));
+        String userHome = System.getProperty("user.home");
+        String filePath = userHome + "/Downloads/random-words.txt";
+        Scanner scanner = new Scanner(new File(filePath));
         List<String> wordsList = new ArrayList<>();
 
         // Read all words from the file
@@ -161,6 +255,27 @@ public class WordsModeGame extends javax.swing.JFrame {
 }
 
     private void setupTextFieldListener() {
+        jTextField1.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                if (!timerStarted) {
+                    startTimer();
+                    timerStarted = true;
+                    startTime = System.currentTimeMillis();
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                // No need to handle removeUpdate for your case
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                // No need to handle changedUpdate for your case
+            }
+        });
+            
         jTextField1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -178,6 +293,122 @@ public class WordsModeGame extends javax.swing.JFrame {
     }
 });
     }
+    
+    private int[] countCorrectWordsAndCharacters() {
+    String[] expectedWords = jTextArea1.getText().split("\\s+");
+    String userInput = jTextField1.getText().trim();
+    String[] userWords = userInput.split("\\s+");
+
+    int minLen = Math.min(expectedWords.length, userWords.length);
+    int correctWordCount = 0;
+    int correctCharCount = 0;
+    int incorrectCharCount = 0;
+
+    for (int i = 0; i < minLen; i++) {
+        String expectedWord = expectedWords[i];
+        String userWord = i < userWords.length ? userWords[i] : "";
+
+        for (int j = 0; j < expectedWord.length(); j++) {
+            totalCharCount++;
+            char expectedChar = expectedWord.charAt(j);
+            char userChar = (j < userWord.length()) ? userWord.charAt(j) : ' ';
+
+            if (expectedChar == userChar) {
+                correctCharCount++;
+            } else {
+                incorrectCharCount++;
+            }
+        }
+
+        // Check for extra characters in userWord
+        for (int j = expectedWord.length(); j < userWord.length(); j++) {
+            incorrectCharCount++;
+        }
+
+        // Check if the entire word is correct
+        if (expectedWord.equalsIgnoreCase(userWord)) {
+            correctWordCount++;
+        }
+    }
+
+    return new int[]{correctWordCount, correctCharCount, incorrectCharCount};
+}
+
+// Calculate accuracy based on correct and incorrect character counts
+private double Accuracy() {
+    int[] correctWordInfo = countCorrectWordsAndCharacters();
+    int correctCharCount = correctWordInfo[1];
+    int incorrectCharCount = correctWordInfo[2];
+
+    int totalCorrectAndIncorrectChars = correctCharCount + incorrectCharCount;
+
+    if (totalCorrectAndIncorrectChars > 0) {
+        return (correctCharCount * 100.0) / totalCorrectAndIncorrectChars;
+    } else {
+        return 0; // If no characters are typed yet
+    }
+}
+    //wpm
+    private int wpm() {
+        int[] correctWordInfo = countCorrectWordsAndCharacters();
+        int correctCharCount = correctWordInfo[1];
+
+        
+//        // Extract minutes and seconds from the formatted time
+//        String[] timeParts = formattedTime.split(":");
+//        int minutes = Integer.parseInt(timeParts[0]);
+//        int seconds = Integer.parseInt(timeParts[1]);
+//
+//        // Calculate total time in seconds
+//        int totalTimeInSeconds = minutes * 60 + seconds;
+
+        // Assuming an average word length of 5 characters
+//        int wpm = (int) (((double) totaltime / 60) * 5);
+        int wpm = (int) (((double) correctCharCount / 5) / (totaltime / 1000.0 / 60.0));
+
+
+        return wpm;
+    }
+    
+    
+    private void startNewGame() {
+        // Reset game-related variables
+        isGameEnded = false;
+        jTextField1.setText("");
+        jTextField1.setEditable(true);
+
+        // Reset word status
+        wordStatus.replaceAll(status -> false);
+
+        // Reset highlights
+        jTextField1.getHighlighter().removeAllHighlights();
+        
+        // Reset the timer
+        resetTimer();
+
+        // Start a new timer
+        startTimer();
+    }
+    
+    //data
+    private void writeScoreToFile() {
+        String username = loginname.getUname(); // Get the username
+         int wpm=wpm();
+         double accuracy=Accuracy();
+         String formattedAccuracy = String.format("%.2f", accuracy);
+        
+        try{
+            FileWriter fw = new FileWriter(username+".txt",true);
+            fw.write(wpm+"\t"+formattedAccuracy+"\n");
+            fw.close();
+            JOptionPane.showMessageDialog(null, "Score saved successfully!");
+        }catch(IOException ex){
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error saving the score!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -287,12 +518,14 @@ public class WordsModeGame extends javax.swing.JFrame {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
         resetGame();
+        startNewGame();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
         generateRandomWords();
         resetGame();
+        startNewGame();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void resetGame() {
