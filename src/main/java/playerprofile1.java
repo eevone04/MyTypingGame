@@ -302,7 +302,7 @@ public class playerprofile1 extends javax.swing.JFrame {
                 
                 displayAverageWPM(name+".txt");
                 
-                displayAverageScore(name+".txt");
+                displayAverageAccuracy(name+".txt");
             
             
             
@@ -375,7 +375,7 @@ public class playerprofile1 extends javax.swing.JFrame {
             ArrayList<Integer> last10WPM = new ArrayList<>();
 
             while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\\s+"); // Assuming space-separated values in the file
+                String[] data = line.split("\\t+"); // tab-separated values in the file
 
                 if(data.length>=2){
                     int wpm = Integer.parseInt(data[0]);
@@ -400,8 +400,12 @@ public class playerprofile1 extends javax.swing.JFrame {
                     averagelast10wpm = (double)last10wpm/totalgame;
                 }
                 
+                // Format the double values with two decimal places
+                String formattedAverageWPM = String.format("%.2f", averagewpm);
+                String formattedAverageLast10WPM = String.format("%.2f", averagelast10wpm);
+                
                 // Add data to the table model
-                tblModel.addRow(new Object[]{averagewpm,averagelast10wpm});
+                tblModel.addRow(new Object[]{formattedAverageWPM,formattedAverageLast10WPM});
                 
             
         } catch (IOException e) {
@@ -409,48 +413,57 @@ public class playerprofile1 extends javax.swing.JFrame {
         }
     }
     
-    private void displayAverageScore(String fileName){
+    
+    private void displayAverageAccuracy(String fileName) {
         DefaultTableModel tblModel = (DefaultTableModel) Accuracyscore.getModel();
         tblModel.setRowCount(0); // Clear existing data in the table
-        
+
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
-            int totalscore=0;
-            int last10score;
+            int totalaccuracy=0;
+            int last10accuracy=0;
             int totalgame=0;
-            double last10accuracyscore;
-            ArrayList<Integer> last10Scores = new ArrayList<>();
-            
+            double averagelast10accuracy;
+
+            ArrayList<Double> last10Accuracy = new ArrayList<>();
+
             while ((line = reader.readLine()) != null) {
-                String[] data = line.split("\\s+"); // Assuming space-separated values in the file
-                
+                String[] data = line.split("\\t+"); // tab-separated values in the file
+
                 if(data.length>=2){
-                    int score = Integer.parseInt(data[1]);
-                    totalscore+=score;
+                    double accuracy = Double.parseDouble(data[1]);
+                    totalaccuracy+=accuracy;
                     totalgame++;
                     
-                    last10Scores.add(score);
+                    last10Accuracy.add(accuracy);
                     
-                    if(last10Scores.size()>10){
-                        last10Scores.remove(0); //only have last 10 score
+                    if(last10Accuracy.size()>10){
+                        last10Accuracy.remove(0); //only have last 10 wpm
                     }
                 }
             }
-            double accuracyscore = (double)totalscore/totalgame;
+            
+                double averageaccuracy = (double)totalaccuracy/totalgame;
                 
-            if(totalgame>=10){
-                last10score = last10Scores.stream().mapToInt(Integer::intValue).sum();
-                last10accuracyscore = (double)last10score/10;
-            }else{
-                last10score = last10Scores.stream().mapToInt(Integer::intValue).sum();
-                last10accuracyscore = (double)last10score/totalgame;
-            }
+                if(totalgame>=10){
+                    last10accuracy = last10Accuracy.stream().mapToInt(Double::intValue).sum();
+                    averagelast10accuracy = (double)last10accuracy/10;
+                }else{
+                    last10accuracy = last10Accuracy.stream().mapToInt(Double::intValue).sum();
+                    averagelast10accuracy = (double)last10accuracy/totalgame;
+                }
                 
-            // Add data to the table model
-            tblModel.addRow(new Object[]{accuracyscore,last10accuracyscore});
+                // Format the double values with two decimal places
+                String formattedAverageAccuracy = String.format("%.2f", averageaccuracy);
+                String formattedAverageLast10Accuracy = String.format("%.2f", averagelast10accuracy);
+                
+                // Add data to the table model
+                tblModel.addRow(new Object[]{formattedAverageAccuracy,formattedAverageLast10Accuracy});
+                
+            
         } catch (IOException e) {
             e.printStackTrace();
-        } 
+        }
     }
         
     // Variables declaration - do not modify//GEN-BEGIN:variables
