@@ -137,7 +137,7 @@ public class QuotesModeGames extends javax.swing.JFrame {
                 // Shuffle the list to get a random quote
                 Collections.shuffle(sentenceList);
                 String randomQuote = sentenceList.get(0);
-                int wordsToDisplay = Math.min(sentenceList.size(), 3);
+                int wordsToDisplay = Math.min(sentenceList.size(), 75);
                 StringBuilder randomWords = new StringBuilder();
 
                 for (int i = 0; i < wordsToDisplay; i++) {
