@@ -54,6 +54,11 @@ public class NewJFrame extends javax.swing.JFrame {
         });
 
         jButton3.setText("Quotes Mode");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
 
         jButton4.setText("Player Profile");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
@@ -76,7 +81,7 @@ public class NewJFrame extends javax.swing.JFrame {
             }
         });
 
-        jButton7.setText("Correaction Mode");
+        jButton7.setText("Correction Mode");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -138,6 +143,14 @@ public class NewJFrame extends javax.swing.JFrame {
         
         dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        QuotesModes quotesModes = new QuotesModes();
+        quotesModes.show();//display TimedMode here
+
+        dispose();
+        }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         // TODO add your handling code here:
